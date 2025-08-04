@@ -1,0 +1,314 @@
+import sys
+from nos import *
+from eval import *
+from exc import execute
+import time as Time
+
+sys.set_int_max_str_digits(2147483647)
+
+class Parser:
+    def __init__(self,varnodes, nodes, variaveis, funcoes, indexNodes):
+        self.varnodes = varnodes
+        self.nodes = nodes
+        self.variaveis = variaveis
+        self.funcoes = funcoes
+        self.indexNodes = indexNodes
+
+    def parse(self, code):
+        linhas = [x for x in code.split("\n")]
+
+        for i, linha in enumerate(linhas):
+            if linha != "":
+                tokens = self.getTokens(linha, i)
+                if not tokens:
+                    continue
+
+                depth = tokens.pop(0)
+
+                match tokens[0]:
+                    case "function":
+                        tokens = [x for x in tokens if x != " "][1:]
+
+                        argumentos = None
+                        environment = {}
+
+                        if len(tokens) == 0:
+                            Erro(linha=[linha, i+1], tipo="Funcao sem argumento.")
+                        if len(tokens) > 1:
+                            argumentos = tokens[1:]
+                            for var in argumentos:
+                                if any(not char.isalpha() for char in var):
+                                    Erro(linha=[linha, i+1], tipo="Numero em nome de variável.")
+                                if var not in self.variaveis:
+                                    varNode = Variavel(nome=var, valor=None, linha=[linha, i+1])
+                                    self.varnodes.append(varNode)
+                                    self.variaveis[var] = varNode
+                                if var not in environment:
+                                    environment[var] = varNode
+
+                        funcNode = (Function(nome=tokens[0], argumentos=argumentos, corpo=None, fim=None, environment=environment, caller=[], depth=depth, linha=[linha, i+1]))
+                        if funcNode.nome in self.funcoes:
+                            Erro(linha=[linha, i+1], tipo="Uma função com tal nome já existe.")
+                        self.funcoes[funcNode.nome] = funcNode 
+
+
+
+                        
+                        self.nodes.append(funcNode)
+                    
+                    case "result":
+                        tokens = [x for x in tokens if x != " "][1:]
+
+                        resultNode = Result(retorno=None, valor=None, funcaoPai=None, depth=depth, linha=[linha, i+1])
+                        if len(tokens) >= 1:
+                            resultNode.retorno = Eval(variaveis=self.variaveis, askNode=resultNode).createOperationAst(tokens)
+                        self.nodes.append(resultNode)
+
+                    case "execute":
+                        tokens = [x for x in tokens if x != " "][1:]
+                        argumentos = None
+                        if len(tokens) == 0:
+                            Erro(linha=[linha, i+1], tipo="Execute sem nome.")
+                        if len(tokens) > 1:
+                            argumentos = tokens[1:]
+
+
+                        self.nodes.append(Execute(execWho=tokens[0], argumentos=argumentos, valor=None, depth=depth, linha=[linha, i+1]))
+
+                    case "apply":
+                        tokens = [x for x in tokens if x != " "][1:]
+                        if len(tokens) != 1:
+                            Erro(linha=[linha, i+1], tipo="Comando apply com quantia indevida de argumentos.")
+                        self.nodes.append(Apply(variavel=tokens[0], depth=depth, linha=[linha, i+1]))
+
+                    case "while":
+                        tokens = [x for x in tokens if x != " "] 
+                        if 1 >= len(tokens):
+                            Erro(linha=[linha, i+1], tipo="Loop sem argumento.")
+                        whileNode = (WhileLoop(pergunta=tokens[1:],corpo=None, fim=None, depth=depth, linha=[linha, i+1]))
+                        whileNode.pergunta = Eval(variaveis=self.variaveis, askNode=whileNode).createOperationAst(whileNode.pergunta)
+                        self.nodes.append(whileNode)
+
+                    case "if":
+                        tokens = [x for x in tokens if x != " "] 
+                        if 1 >= len(tokens):
+                            Erro(linha=[linha, i+1], tipo="Condicional sem argumento.")
+                        ifNode = (ConditionalIf(pergunta=tokens[1:],corpo=None ,fim=None, depth=depth, linha=[linha, i+1]))
+                        ifNode.pergunta = Eval(variaveis=self.variaveis, askNode=ifNode).createOperationAst(ifNode.pergunta)
+                        self.nodes.append(ifNode)
+
+                    case "elif":
+                        tokens = [x for x in tokens if x != " "]
+                        if 1 >= len(tokens):
+                            Erro(linha=[linha, i+1], tipo="Condicional sem argumento.")
+                        elifNode = ConditionalElse(pergunta=tokens[1:],corpo=None, fim=None, depth=depth, linha=[linha, i+1])
+                        elifNode.pergunta = Eval(variaveis=self.variaveis, askNode=elifNode).createOperationAst(elifNode.pergunta)
+                        self.nodes.append(elifNode)
+
+                    case "else":
+                        self.nodes.append(Else(corpo=None, fim=None, depth=depth, linha=[linha, i+1]))
+
+                    case "set":
+                        tokens = tokens[2:]
+
+                        if 3 > len(tokens) or tokens[1] != " ":
+                            Erro(linha=[linha, i+1], tipo="Comando set com operação malformada.")
+                        varNome = tokens[0]
+                        varValor = [x for x in tokens[2:] if x != " "]
+                        if any(not char.isalpha() for char in varNome):
+                            Erro(linha=[linha, i+1], tipo="Numero em nome de variável.")
+
+                        if varValor[0] == "[" and varValor[-1] == "]":
+                            varValor = varValor[1:-1]
+                            if len(varValor) != 0:
+                                count = 1
+                                for token in varValor:
+                                    if token == ",":
+                                        count += 1
+
+                                varValor = [x for x in varValor if x != ","]
+                                if len(varValor) != count:
+                                    Erro(linha=[linha, i+1], tipo="Lista mal-formada")
+                            varValor = [varValor]
+
+                        setNode = (Setter(setwho=varNome, setto=varValor, depth=depth, linha=[linha, i+1]))
+                        setNode.setto = Eval(variaveis=self.variaveis, askNode=setNode).createOperationAst(setNode.setto)
+                        self.nodes.append(setNode)
+
+                        if tokens[1] not in self.variaveis:
+                            varNode = Variavel(nome=varNome, valor=None, linha=[linha, i+1])
+                            self.varnodes.append(varNode)
+                            self.variaveis[varNome] = varNode
+
+                    case "edit":
+                        tokens = [x for x in tokens[2:] if x != " "]
+                        if len(tokens) < 3:
+                            Erro(linha=[linha, i+1], tipo="Comando edit com quantia indevida de argumentos")
+                        if (not isinstance(tokens[0], int)) and (tokens[0] != "add") :
+                            Erro(linha=[linha, i+1], tipo="Comando edit malformado")
+                        setto = [x for x in tokens[2:] if x != " "]
+
+                        editNode = Edit(setwho=tokens[1], index=tokens[0], setto=setto, depth=depth, linha=[linha, i+1])
+                        editNode.setto = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.setto)
+                        self.nodes.append(editNode)
+
+                    case "show":
+                        if " " in tokens:
+                            tokens.remove(" ")
+                        if 1 >= len(tokens):
+                            Erro(linha=[linha, i+1], tipo="Comando show sem argumentos.")
+                        if tokens.count('`') % 2 != 0:
+                            Erro(linha=[linha, i+1], tipo="Quantia indevida de indicadores.")
+                        self.nodes.append(Show(content=tokens[1:], depth=depth, linha=[linha, i+1]))
+
+                    case "get":
+                        if " " in tokens:
+                            tokens.remove(" ")
+                        tokens = tokens[1:]
+                        if 0 >= len(tokens):
+                            Erro(linha=[linha, i+1], tipo="Comando get sem variável.")
+                        variavelNome = tokens[0]
+                        conteudo = None
+                        if len(tokens) > 1 and tokens[1] == " ":
+                            conteudo = tokens[2:]
+                        elif len(tokens) > 1 and tokens[1] != " ":
+                            Erro(linha=[linha, i+1], tipo="Comando get com argumentos misturados.")
+
+                        if variavelNome not in self.variaveis:
+                            Erro(linha=[linha, i+1], tipo="Comando get em variável não declarada.")
+
+                        self.nodes.append(Get(content=conteudo, setwho=variavelNome, depth=depth, linha=[linha, i+1]))
+
+                    case "nothing":
+                        self.nodes.append(Nothing(depth=depth, linha=[linha, i+1]))
+
+                    case "exit":
+                        self.nodes.append(Exit(depth=depth, linha=[linha, i+1]))
+
+                    case "#":
+                        pass
+
+                    case _:
+                        Erro(linha=[linha, i+1], tipo="Comando desconhecido.")
+    
+        self.meaningParse()
+        return self
+    
+    def meaningParse(self):
+        def handleFunction(i, node):
+            if isinstance(self.nodes[i], Setter):
+                return(self.variaveis[self.nodes[i].setwho])
+            elif isinstance(self.nodes[i], Result):
+                self.nodes[i].funcaoPai = node.nome
+            elif isinstance(self.nodes[i], Function) and self.nodes[i].depth > nodeDepth:
+                Erro(linha=self.nodes[i].linha, tipo="Funcao dentro de funcao.")
+            return None
+            
+        i = 0
+        nodeCount = len(self.nodes)
+        while i < nodeCount:
+            if isinstance(self.nodes[i], TemCorpo):
+                nodeDepth = self.nodes[i].depth
+                if i+1 >= nodeCount or self.nodes[i+1].depth <= nodeDepth:
+                    Erro(self.nodes[i].linha, tipo="Comando sem corpo")
+                else:
+                    if isinstance(self.nodes[i], Function):
+                        funcEnvironment = self.nodes[i].environment
+                        result = handleFunction(i+1, self.nodes[i])
+                        if result is not None:
+                            funcEnvironment[self.nodes[i+1].setwho] = result
+
+                    self.nodes[i].corpo = self.nodes[i+1]
+                    j = i+2
+                    while j < nodeCount:
+                        if isinstance(self.nodes[i], Function):
+                            result = handleFunction(j, self.nodes[i])
+                            if result is not None:
+                                funcEnvironment[self.nodes[j].setwho] = result
+
+                        if self.nodes[j].depth <= nodeDepth:
+                            self.nodes[i].fim = self.nodes[j-1]
+                            break
+                        j += 1
+                    if isinstance(self.nodes[i], Function):
+                        self.nodes[i].environment = funcEnvironment
+
+                    if self.nodes[i].fim == None:
+                        self.nodes[i].fim = self.nodes[j-1]
+
+            if isinstance(self.nodes[i], Loop):
+                endNodeIndex = self.nodes.index(self.nodes[i].fim)+1
+                self.nodes.insert(endNodeIndex, EndLoop(loopPai=self.nodes[i], depth=self.nodes[i].depth))
+                self.nodes[i].fim = self.nodes[endNodeIndex]
+                nodeCount+=1
+
+            if isinstance(self.nodes[i], Function):
+                if not isinstance(self.nodes[i].fim, Result):
+                    endNodeIndex = self.nodes.index(self.nodes[i].fim)+1
+                    self.nodes.insert(endNodeIndex, Result(retorno=None, valor=None, funcaoPai=self.nodes[i].nome, depth=self.nodes[i].depth, linha=None))
+                    self.nodes[i].fim = self.nodes[endNodeIndex]
+                    nodeCount+=1
+            i += 1
+
+        for i, node in enumerate(self.nodes):
+            self.indexNodes[node] = i
+
+    def getTokens(self, linha, pos):
+        tokens = []
+        current = ""
+        i = 0 
+        def format(token):
+            try:
+                token = float(token)
+                if token.is_integer():
+                    return(int(token))
+                else:
+                    return(float(token))
+            except:
+                return(token)
+
+        while i < len(linha):
+            char = linha[i]
+            if char.isnumeric() or char in {"."}:
+                current+=char
+            elif char.isalpha():
+                current+=char
+            elif char == '`':
+                current+=char
+                i+=1
+                while i < len(linha) and linha[i] != '`':
+                    current+=linha[i]
+                    i+=1
+                if i >= len(linha):
+                    Erro(linha=[linha, pos+1], tipo="Quantia indevida de indicadores.")
+                current+=linha[i]
+            else:
+                if current != "":
+                    tokens.append(format(current))
+                current = ""
+                if char != "":
+                    tokens.append(char)
+            i += 1
+        if current != "" and current != " ":
+            tokens.append(format(current))
+
+        depth = 0
+        spaceCount = 0
+        while tokens[0] == " ":
+            tokens.pop(0)
+            spaceCount += 1
+            if spaceCount == 4:
+                depth += 1
+                spaceCount = 0
+        tokens.insert(0, depth)
+        return(tokens)
+
+startTime = Time.time()
+astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}).parse(open("test.command").read())
+parseTime = Time.time()-startTime
+startTime = Time.time()
+execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
+execTime = Time.time()-startTime
+
+print("\nTempo de parse:", parseTime, "s")
+print("Tempo de execução:" ,execTime, "s")
