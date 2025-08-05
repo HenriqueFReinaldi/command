@@ -28,10 +28,11 @@ class Conditional(TemCorpo):
 
 #Comandos
 class Edit:
-    def __init__(self,setwho, index, setto, depth, linha):
+    def __init__(self,setwho, index, setto, mode, depth, linha):
         self.setwho = setwho
         self.index = index
         self.setto = setto
+        self.mode = mode
         self.depth = depth
         self.linha = linha
 class Setter:

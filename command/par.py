@@ -110,26 +110,20 @@ class Parser:
 
                     case "set":
                         tokens = tokens[2:]
+                        if len(tokens) < 5 or tokens[1:4] != [" ","to"," "]:
+                            Erro(linha=[linha, i+1], tipo="Comando set malformado.")
+                        else:
+                            varNome = tokens[0]
+                            varValor = [x for x in tokens[4:] if x != " "]
+                            if any(not char.isalpha() for char in varNome):
+                                Erro(linha=[linha, i+1], tipo=f"Caractere proibído em nome de variável.")
 
-                        if 3 > len(tokens) or tokens[1] != " ":
-                            Erro(linha=[linha, i+1], tipo="Comando set com operação malformada.")
-                        varNome = tokens[0]
-                        varValor = [x for x in tokens[2:] if x != " "]
-                        if any(not char.isalpha() for char in varNome):
-                            Erro(linha=[linha, i+1], tipo="Numero em nome de variável.")
+                        if varValor[0] == "[" and varValor[1] == "]":
+                            varValor = [[]]
 
-                        if varValor[0] == "[" and varValor[-1] == "]":
-                            varValor = varValor[1:-1]
-                            if len(varValor) != 0:
-                                count = 1
-                                for token in varValor:
-                                    if token == ",":
-                                        count += 1
+                        if varNome in {"set", "insert", "delete"}:
+                            Erro(linha=[linha, i+1], tipo=f"Nome usado é uma palavra reservada.")
 
-                                varValor = [x for x in varValor if x != ","]
-                                if len(varValor) != count:
-                                    Erro(linha=[linha, i+1], tipo="Lista mal-formada")
-                            varValor = [varValor]
 
                         setNode = (Setter(setwho=varNome, setto=varValor, depth=depth, linha=[linha, i+1]))
                         setNode.setto = Eval(variaveis=self.variaveis, askNode=setNode).createOperationAst(setNode.setto)
@@ -141,15 +135,27 @@ class Parser:
                             self.variaveis[varNome] = varNode
 
                     case "edit":
-                        tokens = [x for x in tokens[2:] if x != " "]
-                        if len(tokens) < 3:
-                            Erro(linha=[linha, i+1], tipo="Comando edit com quantia indevida de argumentos")
-                        if (not isinstance(tokens[0], int)) and (tokens[0] != "add") :
-                            Erro(linha=[linha, i+1], tipo="Comando edit malformado")
-                        setto = [x for x in tokens[2:] if x != " "]
+                        editores = {"set", "insert", "delete"}
+                        tokens = tokens[2:]
+                        if tokens[1:4] != [" ","at"," "]:
+                            Erro(linha=[linha, i+1], tipo="Comando edit malformado.")
+                        
+                        indexEditor = -1
+                        editMode = None
+                        for editor in editores:
+                            if editor in tokens[4:]:
+                                indexEditor = tokens[4:].index(editor)+4   
+                                editMode = editor
+                        if indexEditor < 0:
+                            Erro(linha=[linha, i+1], tipo="Comando edit sem modo de edição.")
 
-                        editNode = Edit(setwho=tokens[1], index=tokens[0], setto=setto, depth=depth, linha=[linha, i+1])
-                        editNode.setto = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.setto)
+                        indexOp = [x for x in tokens[3:indexEditor] if x != " "]
+                        valueOp = [x for x in tokens[indexEditor+1:] if x != " "]
+
+                        editNode = Edit(setwho=tokens[0], index=indexOp, setto=valueOp, mode=editMode, depth=depth, linha=[linha, i+1])
+                        editNode.index = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.index)
+                        if valueOp != []:
+                            editNode.setto = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.setto)
                         self.nodes.append(editNode)
 
                     case "show":

@@ -71,13 +71,30 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
             case Edit():
                 if node.setwho not in environment[-1]:
                     Erro(linha=node.linha, tipo="Comando edit com variável não declarada.")
-                if node.index == "add":
-                    environment[-1][node.setwho].valor.append(Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.setto, variaveis=environment[-1]))
-                else:
-                    if node.index >= len(environment[-1][node.setwho].valor):
-                        Erro(linha=node.linha, tipo="Índice maior que tamanho da variável.")
+                if not(isinstance(environment[-1][node.setwho].valor, (list, dict))):
+                    Erro(linha=node.linha, tipo="Comando edit com variável de tipo proibído.") 
 
-                    environment[-1][node.setwho].valor[node.index] = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.setto, variaveis=environment[-1])
+                if node.index != None and node.setto != None:
+                    index = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.index, variaveis=environment[-1])
+                    setto = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.setto, variaveis=environment[-1])
+                    if not isinstance(index, int):
+                        Erro(linha=node.linha, tipo="Posição deve ser um número inteiro.")
+
+                if node.mode == "insert":
+                    if index == -1:
+                        environment[-1][node.setwho].valor.append(setto)
+                    else:
+                        environment[-1][node.setwho].valor.insert(index, setto)
+                if node.mode == "delete":
+                    if (index < 0 and abs(index) > len(environment[-1][node.setwho].valor)) or index >= len(environment[-1][node.setwho].valor):
+                        Erro(linha=node.linha, tipo="Posição maior que tamanho da variável.")
+                    del environment[-1][node.setwho].valor[index]
+
+
+                if node.mode == "set":
+                    if (index < 0 and abs(index) > len(environment[-1][node.setwho].valor)) or index >= len(environment[-1][node.setwho].valor):
+                        Erro(linha=node.linha, tipo="Posição maior que tamanho da variável.")
+                    environment[-1][node.setwho].valor[index] = setto
 
             case Show():
                 node.show(environment[-1])

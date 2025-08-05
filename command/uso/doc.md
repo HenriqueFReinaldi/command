@@ -76,28 +76,45 @@
         Tipo lista         : Uma sequência de tipos simples
         Tipo mapa          : Um mapeamento x -> y de tipos simples
 
+  
+
 </details>
+
 <details>
-<summary>Criando e Modificando Variaveis</summary>
+<summary>Comando <b>set</b></summary>
 
 * Para criar e/ou modificar o valor de uma variável, utiliza-se a seguinte estrutura:
 
-        set VARIAVEL VALOR.
+        set VARIAVEL to VALOR.
 
 
   "VARIAVEL" deve ser nomeada usando apenas letras (maiúsculas ou minúsculas).<br>
   "VALOR" é uma [OPERAÇÃO](#operações)
 
-  
-* Para modificar uma posição de uma variável, utiliza-se a seguinte 
+  Para criar uma variável do tipo lista, usa se como VALOR braquetes duplos, como:
 
-        edit ÍNDICE VARIAVEL VALOR
+        set VARIAVEL to []
 
-  "ÍNDICE" deve ser um número inteiro, a posição dentro de VARIAVEL a ser modificada.
-  "VARIAVEL" deve ser nomeada usando apenas letras (maiúsculas ou minúsculas).<br>
-  "VALOR" é uma [OPERAÇÃO](#operações)
+</details>
 
-  
+<details>
+<summary>Comando <b>edit</b></summary>
+
+* Para modificar uma posição de uma variável de tipo lista, utiliza-se a seguinte estrutura:
+
+        edit VARIAVEL at POSICAO MODO VALOR
+
+  "POSICAO" é uma [OPERAÇÃO](#operações). Representa o lugar dentro de "VARIAVEL" que será editado.<br>
+  "VARIAVEL" é o nome da variável a ser editada.<br>
+  "VALOR" também é uma [OPERAÇÃO](#operações)
+
+  "MODO" deve ser um dos seguintes:
+
+        Para variáveis do tipo lista:
+                set   : muda o que está em POSICAO para VALOR.   
+                insert: põe VALOR logo antes de POSICAO.
+                delete: remove o que está em POSICAO. Não precisa de VALOR.
+
 </details>
 
 <br>
@@ -124,7 +141,7 @@
 * Esse comando segue a seguinte estrutura: 
 
         if 10-10
-            set a 0
+            set a to 0
         elif OPERAÇÃO
             código condicional
 
@@ -155,7 +172,7 @@
 * Esse comando segue a seguinte estrutura: 
 
         if 10-10
-            set a 0
+            set a to 0
         else
             código condicional
 
@@ -167,9 +184,9 @@
 
 * O comando [while](#loops), por também conter uma "condicional", pode entrar em um encadeamento de condicionais:
 
-        set a 5
+        set a to 5
         while a > 0
-            set a a-1
+            set a to a-1
         elif a = 0
             show Agora, `a` e nulo!
 
@@ -250,7 +267,7 @@
 
 * Usado para aplicar o valor retornado de uma função a uma variavel. Segue a seguinte estrutura:
 
-        set variavel 0
+        set variavel to 0
         execute funcao
         apply variavel
 
@@ -270,7 +287,7 @@
 
 * "ARGUMENTOS" pode ser composto por texto e variáveis:
 
-        set variavel 12
+        set variavel to 12
         show Numero: variavel
 
         SAÍDA:
@@ -281,7 +298,7 @@
 
 * Para poder mostrar o nome de uma variável, envolve-se o termo com "`", chamado de indicador:
 
-        set variavel 12
+        set variavel to 12
         show Valor de `variavel`: variavel
 
         SAÍDA:

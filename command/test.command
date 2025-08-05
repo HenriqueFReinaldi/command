@@ -1,30 +1,17 @@
-function iterfib n
-    set numeros [0, 1]
+set variavel to []
 
-    set na 0
-    set nb 1
-    set numero n
-    while n > 0
-        if (n % 2) = 0
-            set na na+nb
-            edit add numeros na
-        else
-            set nb na+nb
-            edit add numeros nb
-        set n n-1
+set i to 0
+set size to 25
 
-    result numeros
+while i < size
+    edit variavel at -1 insert 0
+    set i to i+1
 
+edit variavel at 5 set 10
+edit variavel at 9 delete
 
-set count 0
-get count -->
-set result []
-execute iterfib count
-apply result
-
-
-set i 0
-while i < count
-    set pos i@result
-    show Numero i : pos
-    set i i+1
+set i to 0
+while i < size-1
+    set pos to i@variavel
+    show pos
+    set i to i+1
