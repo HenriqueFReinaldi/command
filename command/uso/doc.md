@@ -74,8 +74,8 @@
 
 * Existem também dois tipos de dados compostos nessa linguagem:
 
-        Tipo lista         : Uma sequência de tipos simples
-        Tipo mapa          : Um mapeamento x -> y de tipos simples
+        Tipo lista    (lst): Uma sequência de tipos simples
+        Tipo mapa     (map): Um mapeamento x -> y de tipos simples
 
   
 
@@ -105,7 +105,7 @@
 
         edit VARIAVEL at POSICAO MODO VALOR
 
-  `POSICAO` é uma [operação](#operações). Representa o lugar dentro de `VARIAVEL` que será editado.<br>
+  `POSICAO` é uma [operação](#operações). Representa o lugar dentro de `VARIAVEL` que será editado. Pode-se usar `end` para declarar que a posição editada é a ultima. <br>
   `VARIAVEL` é o nome da variável a ser editada.<br>
   `VALOR` também é uma [operação](#operações). Representa o que será posto em `POSICAO`
 

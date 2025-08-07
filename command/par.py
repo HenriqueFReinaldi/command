@@ -31,7 +31,7 @@ class Parser:
                         tokens = tokens[2:]
                     
                         resultVar = None
-                        if len(tokens) > 1:
+                        if len([x for x in tokens if x != " "]) > 1:
                             Erro(linha=[linha, i+1], tipo="Comando check malformado.").parseErr()
                         if len(tokens) == 1:
                             resultVar = tokens[0]
@@ -42,7 +42,7 @@ class Parser:
 
                     case "load":
                         tokens = tokens[2:]
-                        if len(tokens) != 1:
+                        if len([x for x in tokens if x != " "]) != 1:
                             Erro(linha=[linha, i+1], tipo="Comando load malformado.").parseErr()
                         if not os.path.exists(f"{tokens[0]}.command"):
                             Erro(linha=[linha, i+1], tipo="Script não existe.").parseErr()
@@ -106,7 +106,7 @@ class Parser:
                     case "apply":
                         tokens = tokens[2:]
 
-                        if len(tokens) != 3 or tokens[0:2] != ["to", " "]:
+                        if len([x for x in tokens if x != " "]) != 2 or tokens[0:2] != ["to", " "]:
                             Erro(linha=[linha, i+1], tipo="Comando apply malformado.").parseErr()
                         self.nodes.append(Apply(variavel=tokens[2], depth=depth, linha=[linha, i+1]))
 
@@ -182,7 +182,8 @@ class Parser:
                         valueOp = [x for x in tokens[indexEditor+1:] if x != " "]
 
                         editNode = Edit(setwho=tokens[0], index=indexOp, setto=valueOp, mode=editMode, depth=depth, linha=[linha, i+1])
-                        editNode.index = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.index)
+                        if editNode.index != "end":
+                            editNode.index = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.index)
                         if valueOp != []:
                             editNode.setto = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.setto)
                         self.nodes.append(editNode)
@@ -321,14 +322,14 @@ class Parser:
             elif char.isalpha():
                 current+=char
             elif char == '`':
-                #current+=char
                 i+=1
                 while i < len(linha) and linha[i] != '`':
                     current+=linha[i]
                     i+=1
                 if i >= len(linha):
                     Erro(linha=[linha, pos+1], tipo="Quantia indevida de indicadores.").parseErr()
-                #current+=linha[i]
+            elif char == "#":
+                i = len(linha)
             else:
                 if current != "":
                     tokens.append(format(current))
@@ -348,7 +349,6 @@ class Parser:
                 depth += 1
                 spaceCount = 0
         tokens.insert(0, depth)
-
         return(tokens)
 
 startTime = Time.time()
@@ -358,5 +358,8 @@ startTime = Time.time()
 execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
 execTime = Time.time()-startTime
 
+print("\n\n")
+
 print("\nTempo de parse:", parseTime, "s")
 print("Tempo de execução:" ,execTime, "s")
+exit(1)
