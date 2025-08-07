@@ -26,26 +26,31 @@ class Operacao:
         if isinstance(self.di, Operacao):
             direita = self.di.operate(variaveis)
 
+        if isinstance(esquerda, Erro):
+            return esquerda
+        if isinstance(direita, Erro):
+            return direita
+
         if esquerda is not None:
             if isinstance(esquerda, (int, float)) != isinstance(direita, (int, float)):
                 if not(isinstance(direita, (str, list)) and isinstance(esquerda, (int,float)) and self.operador in {"*", "@"}):
-                    Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes.")
+                    return(Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes."))
 
         if isinstance(esquerda, (str)) and ((self.operador not in {"+","*","=",">","<"}) or (isinstance(direita, (str)) and self.operador == "*")):
-            Erro(linha=self.askNode.linha, tipo="Operador mal-usado.")
+            return(Erro(linha=self.askNode.linha, tipo="Operador mal-usado."))
 
         match self.operador:
             #Acesso
 
             case "@":
                 if not isinstance(esquerda, int):
-                    Erro(linha=self.askNode.linha, tipo="O índice de acesso deve ser um inteiro.")
+                    return(Erro(linha=self.askNode.linha, tipo="O índice de acesso deve ser um inteiro."))
 
                 if not isinstance(direita, (str, list)):
-                    Erro(linha=self.askNode.linha, tipo="Variável acessada deve ser posicional.")
+                    return(Erro(linha=self.askNode.linha, tipo="Variável acessada deve ser posicional."))
 
                 if esquerda >= len(direita):
-                    Erro(linha=self.askNode.linha, tipo="Índice maior que quantia de elementos.")
+                    return(Erro(linha=self.askNode.linha, tipo="Índice maior que quantia de elementos."))
                 return(direita[esquerda])
 
 
@@ -58,7 +63,7 @@ class Operacao:
                 if direita == 0:
                     return(1.0)
                 if isinstance(direita, (str, float)):
-                    Erro(linha=self.askNode.linha, tipo="Negação de não-inteiro")
+                    return(Erro(linha=self.askNode.linha, tipo="Negação de não-inteiro"))
                 return(~ direita)
             
             #Logica binária
@@ -86,11 +91,11 @@ class Operacao:
                 return(esquerda * direita)
             case "/":
                 if direita == 0:
-                    Erro(linha=self.askNode.linha, tipo="Divisão por zero.")
+                    return(Erro(linha=self.askNode.linha, tipo="Divisão por zero."))
                 return(esquerda / direita)
             case "%":
                 if direita == 0:
-                    Erro(linha=self.askNode.linha, tipo="Modulo com zero.")
+                    return(Erro(linha=self.askNode.linha, tipo="Modulo com zero."))
                 return(esquerda%direita)
 
             #Comparadores
@@ -139,12 +144,7 @@ class Eval:
                 if i-1 >= 0:
                     lastchar = tokens[i-1]
 
-                if tokens[i] in self.variaveis:
-                    #tokens[i] = self.getValor(tokens[i])
-                    pass
-
-
-                elif token == "-" and ((lastchar in self.ordem or lastchar in {"(",")"}) or (lastchar == None)):
+                if token == "-" and ((lastchar in self.ordem or lastchar in {"(",")"}) or (lastchar == None)):
                     tokens[i] = "u-"
                 i+=1
             return(tokens)
@@ -167,7 +167,7 @@ class Eval:
                     if stacksinal:
                         stacksinal.pop()
                     else:
-                        Erro(linha=self.askNode.linha, tipo="Parenteses não-balanceados.")
+                        Erro(linha=self.askNode.linha, tipo="Parenteses não-balanceados.").parseErr()
                 else:
                     final.append(token)
             while stacksinal:
@@ -181,13 +181,13 @@ class Eval:
             for token in tokens: #Cria a AST
                 if token in self.binario:
                     if len(resultado) < 2:
-                        Erro(linha=self.askNode.linha, tipo="Operação malformada")
+                        Erro(linha=self.askNode.linha, tipo="Operação malformada").parseErr()
                     b = resultado.pop()
                     a = resultado.pop()
                     resultado.append(Operacao(operador=token, es=a, di=b, askNode=self.askNode))
                 elif token in self.unario:
                     if len(resultado) < 1:
-                        Erro(linha=self.askNode.linha, tipo="Operação malformada")
+                        Erro(linha=self.askNode.linha, tipo="Operação malformada").parseErr()
                     b = resultado.pop()
                     resultado.append(Operacao(operador=token, es=None, di=b, askNode=self.askNode))
                 else:
