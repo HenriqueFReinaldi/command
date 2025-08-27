@@ -4,8 +4,8 @@ from eval import *
 import time as Time
 
 def execute(nodes, variaveis, funcoes, nodesIndex):    
-    #for i, node in enumerate(nodes):
-        #print(i+1, ":", node)
+    # for i, node in enumerate(nodes):
+    #     print(i+1, ":", node)
     environment = [variaveis]
     lastConditionalResult = {}
     errorImmunity = []
@@ -107,11 +107,19 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
                 i = nodesIndex[node.loopPai]-1
 
             case Setter():
-                valor = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.setto, variaveis=environment[-1])
-                if isinstance(valor, Erro):
-                    i = execErro(valor)
-                else:
-                    environment[-1][node.setwho].valor = valor
+                foundErrorInList = False
+                if isinstance(node.setto, list):
+                    for j in range(len(node.setto)):
+                        node.setto[j] = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.setto[j], variaveis=environment[-1])
+                        if isinstance(node.setto[j], Erro):
+                            i = execErro(node.setto[j])
+                            foundErrorInList = True
+                if not foundErrorInList:
+                    valor = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.setto, variaveis=environment[-1])
+                    if isinstance(valor, Erro):
+                        i = execErro(valor)
+                    else:
+                        environment[-1][node.setwho].valor = valor
 
             case Edit():
                 if node.setwho not in environment[-1]:
@@ -128,7 +136,7 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
                     elif index != "end":
                         if not isinstance(index, int):
                             i = execErro(Erro(linha=node.linha, tipo="Posição deve ser um número inteiro."))
-                        elif index != -1 and (index < 0 and abs(index) > len(environment[-1][node.setwho].valor)) or index >= len(environment[-1][node.setwho].valor):
+                        elif (not isinstance(environment[-1][node.setwho].valor, dict)) and (index != -1 and (index < 0 and abs(index) > len(environment[-1][node.setwho].valor)) or index >= len(environment[-1][node.setwho].valor)):
                             i = execErro(Erro(linha=node.linha, tipo="Posição maior que tamanho da variável."))
                     if (isinstance(environment[-1][node.setwho].valor, str) != isinstance(setto, str)) and (node.mode in {"delete"}):
                         i = execErro(Erro(linha=node.linha, tipo="Valor deve ser também uma string."))
@@ -140,7 +148,9 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
 
                         match node.mode:
                             case "insert":
-                                if isinstance(environment[-1][node.setwho].valor, str):
+                                if isinstance(environment[-1][node.setwho].valor, dict):
+                                    i = execErro(Erro(linha=node.linha, tipo="Modo insert não pode ser usado com mapas."))
+                                elif isinstance(environment[-1][node.setwho].valor, str):
                                     valor = list(environment[-1][node.setwho].valor)
                                     if index == "end":
                                         valor.append(setto)

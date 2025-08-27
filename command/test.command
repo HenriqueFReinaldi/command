@@ -1,8 +1,3 @@
-load std
-
-set a to 0
-while 1          #para sempre,
-    get a -->
-    execute type a 
-    apply to a     #Faca com que a se torne seu proprio tipo
-    show a
+set n to [1, 33+36, 3-3]
+set val to (-1) @n @n @n
+show val

@@ -37,7 +37,7 @@ class Operacao:
 
         elif esquerda is not None:
             if isinstance(esquerda, (int, float)) != isinstance(direita, (int, float)):
-                if not(isinstance(direita, (str, list)) and isinstance(esquerda, (int,float)) and self.operador in {"*", "@"}):
+                if not(isinstance(direita, (str, list, dict)) and isinstance(esquerda, (int,float)) and self.operador in {"*", "@"}):
                     return(Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes."))
             if (isinstance(esquerda, (list, dict)) or isinstance(direita, (list, dict))) and self.operador != "@":
                     return(Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes."))
@@ -48,14 +48,17 @@ class Operacao:
         match self.operador:
             #Acesso
             case "@":
-                if not isinstance(esquerda, int):
-                    return(Erro(linha=self.askNode.linha, tipo="O índice de acesso deve ser um inteiro."))
-
-                if not isinstance(direita, (str, list)):
+                if isinstance(direita, (list,str)):
+                    if not isinstance(esquerda, int):
+                        return(Erro(linha=self.askNode.linha, tipo="O índice de acesso deve ser um inteiro."))
+                    if esquerda >= len(direita):
+                        return(Erro(linha=self.askNode.linha, tipo="Índice maior que quantia de elementos."))
+                
+                if not isinstance(direita, (str, list, dict)):
                     return(Erro(linha=self.askNode.linha, tipo="Variável acessada deve ser posicional."))
 
-                if esquerda >= len(direita):
-                    return(Erro(linha=self.askNode.linha, tipo="Índice maior que quantia de elementos."))
+                if isinstance(direita, dict) and esquerda not in direita:
+                    return(Erro(linha=self.askNode.linha, tipo="Elemento fora do mapa."))
                 return(direita[esquerda])
 
             #Operadores unários
@@ -199,7 +202,7 @@ class Eval:
 
             return(resultado[0])
 
-        if len(tokens) == 1 and isinstance(tokens[0], list):
+        if len(tokens) == 1 and isinstance(tokens[0], (list, dict)):
             return(tokens[0])
 
         opAST = createAST(tokens)
@@ -207,14 +210,13 @@ class Eval:
         return(result)
     
     def executeAst(self, operationAst, variaveis):
-        if isinstance(operationAst, list):
+        if isinstance(operationAst, (list, dict)):
             return(operationAst)
-
         if isinstance(operationAst, Operacao):
             resultado = operationAst.operate(variaveis)
         else:
             resultado = operationAst
-        if isinstance(resultado, list):
+        if isinstance(resultado, (list, dict)):
             return(resultado)
         elif isinstance(resultado, float) and int(resultado) == float(resultado):
             return(int(resultado))

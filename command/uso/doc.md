@@ -92,9 +92,24 @@
   `VARIAVEL` deve ser nomeada usando apenas letras (maiúsculas ou minúsculas).<br>
   `VALOR` é uma [operação](#operações).
 
+  <br><br>
+
   Para criar uma variável do tipo lista, substitui-se `VALOR` por braquetes duplos, como:
 
         set VARIAVEL to []
+
+  Adicionalmente, a lista também pode ser criada já contendo elementos. Para isso, basta colocá-los entre os braquetes e separá-los por vírgulas. Idealmente, textos devem ser delimitados por indicadores ( ' ), embora isso nem sempre seja obrigatório.:
+
+        set VARIAVEL to [1, texto, 13.5, 'Tinha: ornintorrinco skrrr']
+
+  <br><br>
+
+  Para criar uma variável do tipo mapa, substitui-se `VALOR`por chaves duplas, como: 
+
+        set VARIAVEL to {}
+
+
+
 
 </details>
 
@@ -114,6 +129,10 @@
         Para variáveis do tipo lista e string:
                 set   : muda o que está em POSICAO para VALOR.   
                 insert: põe VALOR logo antes de POSICAO.
+                delete: remove o que está em POSICAO. Não precisa de VALOR.
+
+        Para variáveis do tipo mapa:
+                set: muda o que está em POSICAO para VALOR.
                 delete: remove o que está em POSICAO. Não precisa de VALOR.
 
 </details>

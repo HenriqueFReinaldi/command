@@ -1,4 +1,4 @@
-function length object
+function length object                    #Retorna o tamanho de uma lista / str "object"
     set size to 0
     set achouFim to 0
     while 1
@@ -11,11 +11,11 @@ function length object
         set size to size + 1
     result size
 
-function sum object
+function sum object                       #Retorna a soma dos valores de uma lista "object"
     set type to 0
     execute type object
     apply to type
-    if !(type = lst)
+    if !(type = lista)
         result `objeto deve ser uma lista de numeros...`
     else
         set l to 0
@@ -32,7 +32,7 @@ function sum object
 
     result result
 
-function showList object
+function showList object                  #Mostra o conteúdo de uma lista.
     set index to 0
     set achouFim to 0
     while 1
@@ -43,16 +43,43 @@ function showList object
             show pos  
         set index to index+1
 
-function type object
+function type object                      #Classifica o tipo de "object". Retorna num / str / mapa / lista
     set status to 0
+
     check status
         if 1+object
             nothing
     if status = 0
         result num
+
     check status
         if object+a
             nothing
     if status = 0
         result str
-    result lst
+
+    check status
+        edit object at 0 insert 0
+        edit object at 0 delete
+    if status = 1
+        result mapa
+    result lista
+
+function indexOf target object            #Procura por "target" dentro de uma lista "object". Retorna o index se achar, caso contrário -1.
+    set type to 0
+    execute type object
+    apply to type
+    if !(type = lista)
+        result `objeto deve ser uma lista...`
+    else
+        set l to 0
+        execute length object
+        apply to l
+        set i to 0
+        while i < l
+            set n to i@object
+            if target = i@object
+                result i
+            set i to i+1
+
+        result -1
