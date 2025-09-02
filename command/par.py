@@ -49,7 +49,11 @@ class Parser:
                         if tokens[0] in loaders:
                             Erro(linha=[linha, i+1], tipo="Load circular.").parseErr()
                         loaders.add(tokens[0])
-                        loaded = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(open(f"{tokens[0]}.command").read(), loaders=loaders)
+
+                        dirChamador = os.path.dirname(os.path.abspath(tokens[0]))
+                        filePath = os.path.join(dirChamador, f"{tokens[0]}.command")
+
+                        loaded = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(open(f"{filePath}").read(), loaders=loaders)
                         for node in loaded.nodes:
                             self.nodes.append(node)
                             self.loadedNodes[node] = 0
@@ -373,15 +377,19 @@ class Parser:
         tokens.insert(0, depth)
         return(tokens)
 
-startTime = Time.time()
-astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(open("test.command").read())
-parseTime = Time.time()-startTime
-startTime = Time.time()
-execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
-execTime = Time.time()-startTime
-
-print("\n\n")
-
-print("\nTempo de parse:", parseTime, "s")
-print("Tempo de execução:" ,execTime, "s")
-exit(1)
+def run(codigo, modo):
+    if modo == "clock":
+        startTime = Time.time()
+        astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(codigo)
+        parseTime = Time.time()-startTime
+        startTime = Time.time()
+        execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
+        execTime = Time.time()-startTime
+        print("\n\n")
+        print("\nTempo de parse:", parseTime, "s")
+        print("Tempo de execução:" ,execTime, "s")
+        sys.exit(1)
+    else:
+        astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(codigo)
+        execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
+        sys.exit(1)

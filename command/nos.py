@@ -1,3 +1,5 @@
+import sys
+
 class Variavel:
     def __init__(self, nome, valor, linha):
         self.nome = nome
@@ -13,11 +15,11 @@ class Erro:
 
     def parseErr(self):
         print(f"""\033[31mErro\033[0m : {self.tipo} --> "\033[1m{self.linha[0]}\033[0m", \033[31mlinha {self.linha[1]}\033[0m""")
-        exit(1)
+        sys.exit(1)
 
     def execErr(self):
         print(f"""\033[31mErro\033[0m : {self.tipo} --> "\033[1m{self.linha[0]}\033[0m", \033[31mlinha {self.linha[1]}\033[0m""")
-        exit(1)
+        sys.exit(1)
 
 #SuperClasses
 class Dummy:
