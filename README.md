@@ -14,7 +14,8 @@ Clique [aqui](https://github.com/HenriqueFReinaldi/command/blob/main/command/uso
 1- Baixe o executavel `command.exe` clicando [aqui](https://github.com/HenriqueFReinaldi/command/raw/main/command.exe) ou pela página do github.<br>
 
 2- Coloque-o em um diretório de fácil acesso, como documentos/command.<br>
-<img width="629" height="380" alt="image" src="https://github.com/user-attachments/assets/bf04d883-bcd7-47be-8bdf-051a67352104" /><br>
+<img width="463" height="248" alt="image" src="https://github.com/user-attachments/assets/c614e1c2-29c2-4176-8086-eac58d127281" />
+<br>
 
 3- Bem como outras linguagens, escreva o código dentro de um arquivo de texto e troque o suffixo para `.command` (no exemplo, demo.txt -> demo.command )<br>
 <img width="539" height="298" alt="image" src="https://github.com/user-attachments/assets/cbc38713-dd6d-407d-98c0-9d21454ef0d2" /><br>
