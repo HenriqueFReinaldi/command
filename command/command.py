@@ -2,8 +2,8 @@ import sys
 from par import run
 
 print("command","="*80, "\n\n")
-if len(sys.argv) < 1:
-    print("Por favor, declare o script a ser executado! : command script.command")
+if len(sys.argv) <= 1:
+    print("Command funcionando! Por favor, declare o script a ser executado! : command script.command")
     sys.exit(1)
 
 nome = sys.argv[1]
