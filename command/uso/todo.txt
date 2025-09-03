@@ -1,0 +1,2 @@
+consertar inicializacao de listas, dicionarios com números negativos.
+inicializacao de listas e dict com operacoes em EVAL.
