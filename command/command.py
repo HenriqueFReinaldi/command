@@ -1,4 +1,5 @@
 import sys
+import os
 from par import run
 
 print("command","="*80, "\n\n")
@@ -13,9 +14,11 @@ if ".command" != nome[-8:]:
     sys.exit(1)
 
 try:
+    path = os.path.dirname(os.path.abspath(nome))
     with open(nome, 'r') as f:
         codigo = f.read()
 except:
     print("Esse arquivo não existe!")
     sys.exit(1)
-run(codigo, modo)
+
+run(codigo, modo, path)

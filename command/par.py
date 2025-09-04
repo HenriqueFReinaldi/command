@@ -7,13 +7,14 @@ import time as Time
 sys.set_int_max_str_digits(2147483647)
 
 class Parser:
-    def __init__(self,varnodes, nodes, variaveis, funcoes, indexNodes, loadedNodes):
+    def __init__(self, varnodes, nodes, variaveis, funcoes, indexNodes, loadedNodes, path):
         self.varnodes = varnodes
         self.nodes = nodes
         self.variaveis = variaveis
         self.funcoes = funcoes
         self.indexNodes = indexNodes
         self.loadedNodes = loadedNodes
+        self.path = path
 
     def parse(self, code, loaders=set()):
         linhas = [x for x in code.split("\n")]
@@ -44,16 +45,13 @@ class Parser:
                         tokens = tokens[2:]
                         if len([x for x in tokens if x != " "]) != 1:
                             Erro(linha=[linha, i+1], tipo="Comando load malformado.").parseErr()
-                        if not os.path.exists(f"{tokens[0]}.command"):
+                        if not os.path.exists(f"{self.path}\\{tokens[0]}.command"):
                             Erro(linha=[linha, i+1], tipo="Script não existe.").parseErr()
                         if tokens[0] in loaders:
                             Erro(linha=[linha, i+1], tipo="Load circular.").parseErr()
                         loaders.add(tokens[0])
 
-                        dirChamador = os.path.dirname(os.path.abspath(tokens[0]))
-                        filePath = os.path.join(dirChamador, f"{tokens[0]}.command")
-
-                        loaded = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(open(f"{filePath}").read(), loaders=loaders)
+                        loaded = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}, path=self.path).parse(open(f"{self.path}\\{tokens[0]}.command").read(), loaders=loaders)
                         for node in loaded.nodes:
                             self.nodes.append(node)
                             self.loadedNodes[node] = 0
@@ -313,6 +311,23 @@ class Parser:
                     endNodeIndex = self.nodes.index(self.nodes[i].fim)+1
                     self.nodes.insert(endNodeIndex, EndCheck(checkPai=self.nodes[i], depth=self.nodes[i].depth))
                     self.nodes[i].fim = self.nodes[endNodeIndex]
+
+                    nodesInsideCheck = self.nodes[i+1:endNodeIndex]
+                    minWhiles = float("+inf")
+                    minBreaks = float("+inf")
+
+                    breakNode = None
+                    for node in nodesInsideCheck:
+                        if isinstance(node, WhileLoop):
+                            minWhiles = min(minWhiles, node.depth)
+                        if isinstance(node, BreakLoop):
+                            if minBreaks > node.depth:
+                                minBreaks = node.depth
+                                breakNode = node
+
+                    if minBreaks != float("+inf") and minBreaks <= minWhiles:
+                        Erro(linha=breakNode.linha, tipo="Comando break separado do loop pai por comando check.").parseErr()
+
                     nodeCount+=1
 
                 elif isinstance(self.nodes[i], Function):
@@ -377,10 +392,10 @@ class Parser:
         tokens.insert(0, depth)
         return(tokens)
 
-def run(codigo, modo):
+def run(codigo, modo, path):
     if modo == "clock":
         startTime = Time.time()
-        astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(codigo)
+        astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}, path=path).parse(codigo)
         parseTime = Time.time()-startTime
         startTime = Time.time()
         execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
@@ -390,6 +405,6 @@ def run(codigo, modo):
         print("Tempo de execução:" ,execTime, "s")
         sys.exit(1)
     else:
-        astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}).parse(codigo)
+        astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}, path=path).parse(codigo)
         execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
         sys.exit(1)

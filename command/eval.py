@@ -42,7 +42,7 @@ class Operacao:
             if (isinstance(esquerda, (list, dict)) or isinstance(direita, (list, dict))) and self.operador != "@":
                     return(Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes."))
 
-        elif isinstance(esquerda, (str)) and ((self.operador not in {"+","*","=",">","<"}) or (isinstance(direita, (str)) and self.operador == "*")):
+        if isinstance(esquerda, (str)) and ((self.operador not in {"+","*","=",">","<"}) or (isinstance(direita, (str)) and self.operador == "*")):
             return(Erro(linha=self.askNode.linha, tipo="Operador mal-usado."))
 
         match self.operador:

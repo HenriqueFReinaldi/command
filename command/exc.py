@@ -6,6 +6,9 @@ import time as Time
 def execute(nodes, variaveis, funcoes, nodesIndex):    
     # for i, node in enumerate(nodes):
     #     print(i+1, ":", node)
+
+    
+
     environment = [variaveis]
     lastConditionalResult = {}
     errorImmunity = []
@@ -23,6 +26,7 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
     i = 0
     while i < len(nodes):
         node = nodes[i]
+        
         if not isinstance(node, (Conditional, Loop, Dummy)):
             lastConditionalResult[node.depth] = 1
         match node:
@@ -102,7 +106,7 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
                     i = execErro(Erro(linha=node.linha, tipo="Comando break fora de loop."))
                 else:
                     i = nodesIndex[node.loopPai.fim]
-
+                    
             case EndLoop():
                 i = nodesIndex[node.loopPai]-1
 
@@ -126,7 +130,7 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
                     i = execErro(Erro(linha=node.linha, tipo="Comando edit com variável não declarada."))
                 elif not(isinstance(environment[-1][node.setwho].valor, (list, dict, str))):
                     i = execErro(Erro(linha=node.linha, tipo="Comando edit com variável de tipo proibído."))
-                elif node.index != None and node.setto != None:
+                else:
                     index = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.index, variaveis=environment[-1])
                     setto = Eval(variaveis=environment[-1], askNode=node).executeAst(operationAst=node.setto, variaveis=environment[-1])
                     if isinstance(index, Erro):
@@ -138,6 +142,12 @@ def execute(nodes, variaveis, funcoes, nodesIndex):
                             i = execErro(Erro(linha=node.linha, tipo="Posição deve ser um número inteiro."))
                         elif (not isinstance(environment[-1][node.setwho].valor, dict)) and (index != -1 and (index < 0 and abs(index) > len(environment[-1][node.setwho].valor)) or index >= len(environment[-1][node.setwho].valor)):
                             i = execErro(Erro(linha=node.linha, tipo="Posição maior que tamanho da variável."))
+                        elif index == -1 and environment[-1][node.setwho].valor == []:
+                            i = execErro(Erro(linha=node.linha, tipo="Posição maior que tamanho da variável."))
+                    elif index == "end":
+                        if environment[-1][node.setwho].valor == [] and node.mode in {"set","delete"}:
+                            i = execErro(Erro(linha=node.linha, tipo="Posição maior que tamanho da variável."))
+
                     if (isinstance(environment[-1][node.setwho].valor, str) != isinstance(setto, str)) and (node.mode in {"delete"}):
                         i = execErro(Erro(linha=node.linha, tipo="Valor deve ser também uma string."))
                     else:

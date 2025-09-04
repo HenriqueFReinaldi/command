@@ -21,36 +21,36 @@
 
 * Operadores unários: 
         
-        ! : 7 : Not lógico   : !0 = 1
-        - : 7 : Negação      : -1 = 1 * -1
+        ! | 7 | Not lógico    | !0 = 1
+        - | 7 | Oposição      | -x = x * -1
 
 * Operadores binários:
 
-        | : 1 : Ou lógico    : 0 | 1 = 1
-        & : 2 : And lógico   : 0 & 1 = 0
-        + : 4 : Soma         : 1 + 2 = 3
-        - : 4 : Subtração    : 1 - 2 = -1
-        * : 5 : Multiplicação: 2 * 2 = 4
-        / : 5 : Divisão      : 2 / 2 = 1
-        % : 5 : Módulo       : 2 % 2 = 0
-        ^ : 6 : Potência     : 5 ^ 3 = 125
-        ~ : 0 : Arredondação : 0~10.6 = 11 (a ~ b → arredonda o número a com b casas decimais)
-        @ : 7 : Posição      : i @ x → Selecionará e corresponderá à posição "i" de uma variável x.  
+        | | 1 | Ou lógico     | 0 | 1 = 1
+        & | 2 | And lógico    | 0 & 1 = 0
+        + | 4 | Soma          | 1 + 2 = 3
+        - | 4 | Subtração     | 1 - 2 = -1
+        * | 5 | Multiplicação | 2 * 2 = 4
+        / | 5 | Divisão       | 2 / 2 = 1
+        % | 5 | Módulo        | 2 % 2 = 0
+        ^ | 6 | Potência      | 5 ^ 3 = 125
+        ~ | 0 | Arredondação  | 0~10.6 = 11 (a ~ b → arredonda o número a com b casas decimais)
+        @ | 7 | Posição       | i @ x → Selecionará e corresponderá à posição "i" de uma variável x.  
 
 * Comparadores:
 
-        > : 3 : Maior          : 10 > 5 = 1 (Retorna 1 caso (a>b), 0 caso contrário.)
-        < : 3 : Menor          : 10 < 5 = 0 (Retorna 1 caso (a<b), 0 caso contrário.)
-        = : 3 : Igualdade      : 10 = 10 = 1 (Retorna 1 caso (a=b), 0 caso contrário.)
+        > | 3 | Maior         | 10 > 5 = 1 (Retorna 1 caso (a>b), 0 caso contrário.)
+        < | 3 | Menor         | 10 < 5 = 0 (Retorna 1 caso (a<b), 0 caso contrário.)
+        = | 3 | Igualdade     | 10 = 10 = 1 (Retorna 1 caso (a=b), 0 caso contrário.)
 
         Nota: Se os dois primeiros comparadores (>,<) forem usados com strings, a comparação será feita com base na quantidade de caracteres: abc > abdc será executado como 3 > 4
 
 * Parênteses:
 
-        Usados para "roubar" prioridade. O que está entre parênteses será executado antes.:
+        Usados para "roubar" prioridade. O que está entre parênteses será executado antes:
 
-        2*2+2 = 6
-        2*(2+2) = 8
+                2*2+2 = 6
+                2*(2+2) = 8
 
 </details>
 
@@ -207,7 +207,7 @@
 <summary> Comando <b> while </b> </summary>
 
 * Um loop, ou ciclo, é uma estrutura que repete uma porção de código.
-* Este comando serve para criar ciclos. Segue a seguinte estrutura?
+* Este comando serve para criar ciclos. Segue a seguinte estrutura:
 
         while OPERACAO
             CODIGO
@@ -334,12 +334,12 @@
 <details>
 <summary>Comando <b>load</b></summary>
 
-* Este comando carrega funções de outros scripts. Segue a seguinte estrutura:
+* Este comando põe outro script dentro do atual. Segue a seguinte estrutura:
 
         load NOMESCRIPT
 
   `NOMESCRIPT` deve ser o nome de um arquivo .command dentro do mesmo diretório que o script procurador.<br>
-  Se `NOMESCRIPT` for encontrado, suas funções subistituirão o comando load. Tudo fora de funções será ignorado.
+  Se `NOMESCRIPT` for encontrado, seu código subistituitá o comando.s
 
 
 </details>

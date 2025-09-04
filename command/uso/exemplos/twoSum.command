@@ -24,13 +24,24 @@ function twosum nums target
 
                 set a to i@nums
                 set b to comp@nums
-                show a b
                 result
         set i to i+1
     show sem resultado.
     result
 
-set n to [2, 7, 11, 15]
+set n to []
+while 1
+    set c to 0
+    get c Adicione um numero (para parar, digite "parou")-->
+    set status to 0
+    check status
+        if c = parou
+            nothing
+    if status = 0
+        break
+    edit n at end insert c
+
+execute showList n
 set t to 0
 while 1 
     get t -->

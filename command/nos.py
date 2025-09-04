@@ -102,7 +102,7 @@ class Nothing:
         self.depth = depth
         self.linha = linha
 
-#Erros
+#CheckErros
 class Check(TemCorpo):
     def __init__(self, corpo, fim, resultVar, depth, linha):
         self.corpo = corpo
@@ -146,7 +146,7 @@ class Apply:
         self.depth = depth
         self.linha = linha
 
-#Loops#aaa
+#Loops
 class WhileLoop(Loop):
     def __init__(self, pergunta, corpo, fim, depth, linha):
         self.pergunta = pergunta
