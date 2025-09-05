@@ -3,7 +3,7 @@ Esta é a minha tentativa de criar um linguagem de programação que seja mais f
 Ainda é um projeto em desenvolvimento, portanto, bugs ou falhas são de se esperar:
 
     Lista de problemas encontrados atual:
-      - Comando load funciona incorretamente por causa de fix para o executável.
+      - Interação de erro com comando show
 
 Clique [aqui](https://github.com/HenriqueFReinaldi/command/blob/main/command/uso/doc.md) para abrir a documentação.
 
