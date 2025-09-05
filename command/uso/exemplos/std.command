@@ -16,20 +16,19 @@ function sum object                       #Retorna a soma dos valores de uma lis
     execute type object
     apply to type
     if !(type = lista)
-        result `objeto deve ser uma lista de numeros...`
+        result 'objeto deve ser uma lista de numeros...'
     else
         set l to 0
         execute length object
         apply to l
         set l to l-1
         if l < 0 | l = 0
-            result `lista não contem itens...`
+            result 'lista não contem itens...'
 
         set result to 0
         while l > -1
             set result to result+l@object
             set l to l-1
-
     result result
 
 function showList object                  #Mostra o conteúdo de uma lista.
@@ -70,7 +69,7 @@ function indexOf target object            #Procura por "target" dentro de uma li
     execute type object
     apply to type
     if !(type = lista)
-        result `objeto deve ser uma lista...`
+        result 'objeto deve ser uma lista...'
     else
         set l to 0
         execute length object
@@ -83,3 +82,28 @@ function indexOf target object            #Procura por "target" dentro de uma li
             set i to i+1
 
         result -1
+
+function bbSort object
+    set type to 0
+    execute type object
+    apply to type
+    if !(type = lista)
+        result 'objeto deve ser uma lista...'
+    else
+        set len to 0
+        execute length object
+        apply to len
+        if len < 2
+            result object
+        else
+            set i to 0
+            while i < len
+                set j to i
+                while j < len
+                    if i@object > j@object
+                        set temp to i@object
+                        edit object at i set j@object
+                        edit object at j set temp
+                    set j to j+1
+                set i to i+1
+            result object

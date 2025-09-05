@@ -13,12 +13,18 @@ class Operacao:
             valor = variaveis[valor].valor
         return valor 
 
+    def tipo(self, item):
+        tipos = {int:"num",float:"num",str:"str",list:"lst",dict:"dic"}
+        if item == None:
+            return("nil")
+        return(tipos[type(item)])
+
     def operate(self, variaveis):
         esquerda = self.es
         direita = self.di
         if esquerda in variaveis:
             esquerda = self.getValor(esquerda, variaveis)
-        if self.di in variaveis:
+        if direita in variaveis:
             direita = self.getValor(direita, variaveis)
 
         if isinstance(self.es, Operacao):
@@ -30,35 +36,24 @@ class Operacao:
             return esquerda
         elif isinstance(direita, Erro):
             return direita
-
-        elif esquerda is None:
-            if self.operador not in {"u-","!"}:
-                return(Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes."))
-
-        elif esquerda is not None:
-            if isinstance(esquerda, (int, float)) != isinstance(direita, (int, float)):
-                if not(isinstance(direita, (str, list, dict)) and isinstance(esquerda, (int,float)) and self.operador in {"*", "@"}):
-                    return(Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes."))
-            if (isinstance(esquerda, (list, dict)) or isinstance(direita, (list, dict))) and self.operador != "@":
-                    return(Erro(linha=self.askNode.linha, tipo="Operação proibida com tipos diferentes."))
-
-        if isinstance(esquerda, (str)) and ((self.operador not in {"+","*","=",">","<"}) or (isinstance(direita, (str)) and self.operador == "*")):
-            return(Erro(linha=self.askNode.linha, tipo="Operador mal-usado."))
+        elif self.tipo(esquerda) != self.tipo(direita) and self.operador not in {"*","@",">","<","=","u-","!"}:
+            return(Erro(linha=self.askNode.linha, tipo=f'Operador "{self.operador}" não pode ser usado com tipos diferentes.'))
 
         match self.operador:
             #Acesso
             case "@":
-                if isinstance(direita, (list,str)):
+                if isinstance(direita, (int, float)):
+                    return(Erro(linha=self.askNode.linha, tipo="Variável acessada deve ser posicional."))
+                elif isinstance(direita, (list,str)):
                     if not isinstance(esquerda, int):
                         return(Erro(linha=self.askNode.linha, tipo="O índice de acesso deve ser um inteiro."))
-                    if esquerda >= len(direita):
+                    elif esquerda < -len(direita) or esquerda >= len(direita):
                         return(Erro(linha=self.askNode.linha, tipo="Índice maior que quantia de elementos."))
-                
-                if not isinstance(direita, (str, list, dict)):
-                    return(Erro(linha=self.askNode.linha, tipo="Variável acessada deve ser posicional."))
-
-                if isinstance(direita, dict) and esquerda not in direita:
-                    return(Erro(linha=self.askNode.linha, tipo="Elemento fora do mapa."))
+                elif isinstance(direita, dict):
+                    if isinstance(esquerda, (dict, list)):
+                        return(Erro(linha=self.askNode.linha, tipo="Elemento não pode ser chave."))
+                    elif esquerda not in direita:
+                        return(Erro(linha=self.askNode.linha, tipo="Elemento fora do mapa."))
                 return(direita[esquerda])
 
             #Operadores unários
@@ -95,6 +90,10 @@ class Operacao:
             case "-":
                 return(esquerda - direita)
             case "*":
+                if isinstance(esquerda, dict) or isinstance(direita, dict):
+                    return(Erro(linha=self.askNode.linha, tipo=f'Operador "{self.operador}" não pode ser usado com mapas.'))
+                if (type(esquerda) in {float, list, str} and type(direita) != int) or (type(direita) in {float, list, str} and type(esquerda) != int):
+                    return(Erro(linha=self.askNode.linha, tipo=f'Operador "{self.operador}" não pode ser usado com tipos diferentes.'))
                 return(esquerda * direita)
             case "/":
                 if direita == 0:
@@ -107,15 +106,13 @@ class Operacao:
 
             #Comparadores
             case ">":
-                if isinstance(esquerda, (float,int)):
-                    return(1.0 if esquerda > direita else 0.0)
-                if isinstance(esquerda, str):
-                    return(1.0 if len(esquerda) > len(direita) else 0.0)
+                newDir = len(direita) if isinstance(direita, (str,list,dict)) else direita
+                newEsq = len(esquerda) if isinstance(esquerda, (str,list,dict)) else esquerda
+                return(1.0 if newEsq > newDir else 0.0)
             case "<":
-                if isinstance(esquerda, (float,int)):
-                    return(1.0 if esquerda < direita else 0.0)
-                if isinstance(esquerda, str):
-                    return(1.0 if len(esquerda) < len(direita) else 0.0)
+                newDir = len(direita) if isinstance(direita, (str,list,dict)) else direita
+                newEsq = len(esquerda) if isinstance(esquerda, (str,list,dict)) else esquerda
+                return(1.0 if newEsq < newDir else 0.0)
             case "=":
                 if direita == esquerda:
                     return(1.0)
@@ -126,7 +123,6 @@ class Eval:
     def __init__(self,variaveis, askNode):
         self.variaveis = variaveis
         self.askNode = askNode
-
         self.ordem = {"~":0, #aproximacao ( 1~10.07 arredonde 10.07 para a primeira casa : 10.1)
                       "|":1, #ou
                       "&":2, #ands
@@ -200,6 +196,8 @@ class Eval:
                 else:
                     resultado.append(token)
 
+            if len(resultado) > 1:
+                Erro(linha=self.askNode.linha, tipo="Operação malformada").parseErr()
             return(resultado[0])
 
         if len(tokens) == 1 and isinstance(tokens[0], (list, dict)):

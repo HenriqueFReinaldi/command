@@ -35,7 +35,7 @@
         % | 5 | Módulo        | 2 % 2 = 0
         ^ | 6 | Potência      | 5 ^ 3 = 125
         ~ | 0 | Arredondação  | 0~10.6 = 11 (a ~ b → arredonda o número a com b casas decimais)
-        @ | 7 | Posição       | i @ x → Selecionará e corresponderá à posição "i" de uma variável x.  
+        @ | 8 | Posição       | i @ x → Selecionará e corresponderá à posição "i" de uma variável x.  
 
 * Comparadores:
 
@@ -43,7 +43,10 @@
         < | 3 | Menor         | 10 < 5 = 0 (Retorna 1 caso (a<b), 0 caso contrário.)
         = | 3 | Igualdade     | 10 = 10 = 1 (Retorna 1 caso (a=b), 0 caso contrário.)
 
-        Nota: Se os dois primeiros comparadores (>,<) forem usados com strings, a comparação será feita com base na quantidade de caracteres: abc > abdc será executado como 3 > 4
+        Nota: Se os dois primeiros comparadores (>,<) forem usados com strings,listas ou mapas, a comparação será feita com base na quantidade de caracteres / membros: 
+        
+                abc > abdc será executado como 3 > 4.
+                [1,2,3] > {abc -> 2, def ->4} será executado como 3 > 2
 
 * Parênteses:
 
