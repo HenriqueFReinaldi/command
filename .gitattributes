@@ -1,0 +1,2 @@
+*.command linguist-detectable=false
+*.exe linguist-detectable=false
