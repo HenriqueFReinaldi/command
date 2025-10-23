@@ -16,6 +16,20 @@ class Parser:
         self.loadedNodes = loadedNodes
         self.path = path
 
+    def createList(self, tokens: list, node: object) -> list:
+        itens = []
+        atual = []
+        for valor in tokens:
+            if valor == ",":
+                if atual:
+                    itens.append(Eval(variaveis=self.variaveis, askNode=node).createOperationAst(atual))
+                    atual = []
+            else:
+                atual.append(valor)
+        if atual:
+            itens.append(Eval(variaveis=self.variaveis, askNode=node).createOperationAst(atual))
+        return itens
+
     def parse(self, code, loaders=set()):
         linhas = [x for x in code.split("\n")]
         for i, linha in enumerate(linhas):
@@ -80,7 +94,6 @@ class Parser:
                                     self.variaveis[var] = varNode
                                 if var not in environment:
                                     environment[var] = varNode
-
                         funcNode = (Function(nome=tokens[0], argumentos=argumentos, corpo=None, fim=None, environment=environment, caller=[], depth=depth, linha=[linha, i+1]))
                         if funcNode.nome in self.funcoes:
                             Erro(linha=[linha, i+1], tipo="Uma função com tal nome já existe.").parseErr()
@@ -101,10 +114,12 @@ class Parser:
                         argumentos = None
                         if len(tokens) == 0:
                             Erro(linha=[linha, i+1], tipo="Execute sem nome.").parseErr()
-                        if len(tokens) > 1:
-                            argumentos = tokens[1:]
 
-                        self.nodes.append(Execute(execWho=tokens[0], argumentos=argumentos, valor=None, depth=depth, linha=[linha, i+1]))
+                        executeNode = Execute(execWho=tokens[0], argumentos=None, valor=None, depth=depth, linha=[linha, i+1])
+                        if len(tokens) > 1:
+                            argumentos = (self.createList(tokens=tokens[2:-1], node=executeNode))
+                        executeNode.argumentos = argumentos
+                        self.nodes.append(executeNode)
 
                     case "apply":
                         tokens = tokens[2:]
@@ -112,6 +127,13 @@ class Parser:
                         if len([x for x in tokens if x != " "]) != 2 or tokens[0:2] != ["to", " "]:
                             Erro(linha=[linha, i+1], tipo="Comando apply malformado.").parseErr()
                         self.nodes.append(Apply(variavel=tokens[2], depth=depth, linha=[linha, i+1]))
+
+                    case "adopt":
+                        tokens = tokens[2:]
+
+                        if len([x for x in tokens if x != " "]) != 1:
+                            Erro(linha=[linha, i+1], tipo="Comando adopt malformado.").parseErr()
+                        self.nodes.append(Adopt(variavel=tokens[0], depth=depth, linha=[linha, i+1]))
 
                     case "while":
                         tokens = [x for x in tokens if x != " "] 
@@ -152,31 +174,50 @@ class Parser:
                             varValor = [x for x in tokens[4:] if x != " "]
                             if any(not char.isalpha() for char in varNome):
                                 Erro(linha=[linha, i+1], tipo=f"Caractere proibído em nome de variável.").parseErr()
-                            if varNome in {"set", "insert", "delete"}:
-                                Erro(linha=[linha, i+1], tipo=f"Nome usado é uma palavra reservada.").parseErr()
 
                             setNode = (Setter(setwho=varNome, setto=varValor, depth=depth, linha=[linha, i+1]))
 
                             if varValor[0] == "[" and varValor[-1] == "]":
-                                varValor = varValor[1:-1]
-                                itens = []
-                                atual = []
-                                for valor in varValor:
-                                    if valor == ",":
-                                        if atual:
-                                            itens.append(Eval(variaveis=self.variaveis, askNode=setNode).createOperationAst(atual))
-                                            atual = []
-                                    else:
-                                        atual.append(valor)
-                                if atual:
-                                    itens.append(Eval(variaveis=self.variaveis, askNode=setNode).createOperationAst(atual))
+                                varValor = varValor[1:-1]                                
+                                setNode.setto = self.createList(tokens=varValor, node=setNode)
 
-                                varValor=itens
-                                setNode.setto = varValor
+                            elif varValor[0] == "{" and varValor[-1] == "}":
+                                if len(varValor) == 2:
+                                    setNode.setto = {}
+                                else:
+                                    varValor = varValor[1:-1]
+                                    itens = []
+                                    atual = []
+                                    mapa = {}
 
-                            elif varValor[0] == "{" and varValor[1] == "}":
-                                setNode.setto = {}
+                                    for valor in varValor:
+                                        if valor == ",":
+                                            if atual:
+                                                itens.append(atual)
+                                                atual = []
+                                        else:
+                                            atual.append(valor)
+                                    itens.append(atual)
+                                    
+                                    for item in itens:
+                                        foundArrow = False
+                                        arrowIndex = 0
+                                        for k in range(len(item)):
+                                            if item[k:k+2] == ["-",">"]:
+                                                arrowIndex = k
+                                                foundArrow = True
+                                                break
+                                        if foundArrow == False or item[:arrowIndex] == [] or item[arrowIndex+2:] == []:
+                                            Erro(linha=[linha, i+1], tipo=f"Mapa malformado.").parseErr()
+
+                                        key = ''.join([str(x) for x in item[:arrowIndex]])
+                                        value = Eval(variaveis=self.variaveis, askNode=setNode).createOperationAst(item[arrowIndex+2:])
+                                        mapa[key] = value
+                                    setNode.setto = mapa
                             
+                            elif varValor[0] == "_" and len(varValor) == 1:
+                                setNode.setto = None
+
                             else:
                                 setNode.setto = Eval(variaveis=self.variaveis, askNode=setNode).createOperationAst(setNode.setto)
                             self.nodes.append(setNode)
@@ -185,31 +226,6 @@ class Parser:
                                 varNode = Variavel(nome=varNome, valor=None, linha=[linha, i+1])
                                 self.varnodes.append(varNode)
                                 self.variaveis[varNome] = varNode
-
-                    case "edit":
-                        editores = {"set", "insert", "delete"}
-                        tokens = tokens[2:]
-                        if tokens[1:4] != [" ","at"," "]:
-                            Erro(linha=[linha, i+1], tipo="Comando edit malformado.").parseErr()
-                        
-                        indexEditor = -1
-                        editMode = None
-                        for editor in editores:
-                            if editor in tokens[4:]:
-                                indexEditor = tokens[4:].index(editor)+4   
-                                editMode = editor
-                        if indexEditor < 0:
-                            Erro(linha=[linha, i+1], tipo="Comando edit sem modo de edição.").parseErr()
-
-                        indexOp = [x for x in tokens[3:indexEditor] if x != " "]
-                        valueOp = [x for x in tokens[indexEditor+1:] if x != " "]
-
-                        editNode = Edit(setwho=tokens[0], index=indexOp, setto=valueOp, mode=editMode, depth=depth, linha=[linha, i+1])
-                        if editNode.index != "end":
-                            editNode.index = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.index)
-                        if valueOp != []:
-                            editNode.setto = Eval(variaveis=self.variaveis, askNode=editNode).createOperationAst(editNode.setto)
-                        self.nodes.append(editNode)
 
                     case "show":
                         if " " in tokens:
@@ -277,24 +293,27 @@ class Parser:
                             result = handleFunction(i+1, self.nodes[i])
                             if result is not None:
                                 funcEnvironment[self.nodes[i+1].setwho] = result
-
-                        if isinstance(self.nodes[i] , Loop) and isinstance(self.nodes[i+1], BreakLoop) and (self.nodes[i+1].depth > nodeDepth): 
+                            
+                        elif isinstance(self.nodes[i] , Loop) and isinstance(self.nodes[i+1], BreakLoop) and (self.nodes[i+1].depth > nodeDepth): 
                             self.nodes[i+1].loopPai = self.nodes[i]
 
                         self.nodes[i].corpo = self.nodes[i+1]
                         j = i+2
                         while j < nodeCount:
-                            if isinstance(self.nodes[i], Function):
-                                result = handleFunction(j, self.nodes[i])
-                                if result is not None:
-                                    funcEnvironment[self.nodes[j].setwho] = result
-                            if isinstance(self.nodes[i] , Loop) and isinstance(self.nodes[j], BreakLoop) and (self.nodes[j].depth > nodeDepth): 
-                                self.nodes[j].loopPai = self.nodes[i]
-
                             if self.nodes[j].depth <= nodeDepth:
                                 self.nodes[i].fim = self.nodes[j-1]
                                 break
+
+                            elif isinstance(self.nodes[i], Function):
+                                result = handleFunction(j, self.nodes[i])
+                                if result is not None:
+                                    funcEnvironment[self.nodes[j].setwho] = result
+
+                            elif isinstance(self.nodes[i] , Loop) and isinstance(self.nodes[j], BreakLoop) and (self.nodes[j].depth > nodeDepth): 
+                                self.nodes[j].loopPai = self.nodes[i]
+
                             j += 1
+                        
                         if isinstance(self.nodes[i], Function):
                             self.nodes[i].environment = funcEnvironment
 
@@ -331,11 +350,12 @@ class Parser:
                     nodeCount+=1
 
                 elif isinstance(self.nodes[i], Function):
-                    if not isinstance(self.nodes[i].fim, Result):
+                    if not isinstance(self.nodes[i].fim, Result): 
                         endNodeIndex = self.nodes.index(self.nodes[i].fim)+1
                         self.nodes.insert(endNodeIndex, Result(retorno=None, valor=None, funcaoPai=self.nodes[i].nome, depth=self.nodes[i].depth, linha=None))
                         self.nodes[i].fim = self.nodes[endNodeIndex]
                         nodeCount+=1
+
             i += 1
 
         for i, node in enumerate(self.nodes):
@@ -393,18 +413,13 @@ class Parser:
         return(tokens)
 
 def run(codigo, modo, path):
+    modo = "clock"
     if modo == "clock":
-        startTime = Time.time()
         astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}, path=path).parse(codigo)
-        parseTime = Time.time()-startTime
-        startTime = Time.time()
+        startTime = Time.perf_counter()
         execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
-        execTime = Time.time()-startTime
-        print("\n\n")
-        print("\nTempo de parse:", parseTime, "s")
+        execTime = Time.perf_counter()-startTime
         print("Tempo de execução:" ,execTime, "s")
-        sys.exit(1)
     else:
         astCommands = Parser(varnodes=[], nodes=[],variaveis={},funcoes={}, indexNodes={}, loadedNodes={}, path=path).parse(codigo)
         execute(nodes=astCommands.nodes, variaveis=astCommands.variaveis, funcoes=astCommands.funcoes, nodesIndex=astCommands.indexNodes)
-        sys.exit(1)

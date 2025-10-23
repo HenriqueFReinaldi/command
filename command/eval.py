@@ -22,6 +22,7 @@ class Operacao:
     def operate(self, variaveis):
         esquerda = self.es
         direita = self.di
+
         if esquerda in variaveis:
             esquerda = self.getValor(esquerda, variaveis)
         if direita in variaveis:
@@ -32,13 +33,26 @@ class Operacao:
         if isinstance(self.di, Operacao):
             direita = self.di.operate(variaveis)
 
+        if isinstance(esquerda, str) and len(esquerda) > 1:
+            if esquerda[0] == esquerda[-1] == "'":
+                esquerda = esquerda[1:-1]
+        if isinstance(direita, str) and len(direita) > 1:
+            if direita[0] == direita[-1] == "'":
+                direita = direita[1:-1]
+
         if isinstance(esquerda, Erro):
             return esquerda
         elif isinstance(direita, Erro):
             return direita
-        elif self.tipo(esquerda) != self.tipo(direita) and self.operador not in {"*","@",">","<","=","u-","!"}:
+        
+        te = self.tipo(esquerda)
+        td = self.tipo(direita)
+        if te != td and self.operador not in {"*","@","$",">","<","=","u-","!"}:
             return(Erro(linha=self.askNode.linha, tipo=f'Operador "{self.operador}" não pode ser usado com tipos diferentes.'))
-
+        if self.operador in {"~","|","&",">","<","=","+","-","*","/","%","^","@","$"} and (te == "nil" or td == "nil"):
+            return(Erro(linha=self.askNode.linha, tipo=f'Operador "{self.operador}" não pode ser usado com tipo nulo.'))
+        if self.operador in {"!","u-"} and td == "nil":
+            return(Erro(linha=self.askNode.linha, tipo=f'Operador "{self.operador}" não pode ser usado com tipo nulo.'))
         match self.operador:
             #Acesso
             case "@":
@@ -55,6 +69,15 @@ class Operacao:
                     elif esquerda not in direita:
                         return(Erro(linha=self.askNode.linha, tipo="Elemento fora do mapa."))
                 return(direita[esquerda])
+            case "$":
+                if isinstance(direita, (int, float)):
+                    return(Erro(linha=self.askNode.linha, tipo="Variável acessada deve ser posicional."))
+                if isinstance(direita, str) and not isinstance(esquerda, str):
+                    return(Erro(linha=self.askNode.linha, tipo="Ambos operandos devem ser strings."))
+                if esquerda in direita:
+                    return 1
+                else:
+                    return 0
 
             #Operadores unários
             case "u-":
@@ -131,9 +154,9 @@ class Eval:
                       "*":5,"/":5,"%":5,
                       "^":6,
                       "!":7,"u-":7,
-                      "@":8
+                      "@":8,"$":8
                       }
-        self.binario = {"~","|","&",">","<","=","+","-","*","/","%","^","@"}
+        self.binario = {"~","|","&",">","<","=","+","-","*","/","%","^","@","$"}
         self.unario = {"!","u-"}
 
     def createOperationAst(self, operation):
@@ -202,22 +225,17 @@ class Eval:
 
         if len(tokens) == 1 and isinstance(tokens[0], (list, dict)):
             return(tokens[0])
-
-        opAST = createAST(tokens)
-        result = opAST
-        return(result)
+        
+        return(createAST(tokens))
     
     def executeAst(self, operationAst, variaveis):
         if isinstance(operationAst, (list, dict)):
             return(operationAst)
+        resultado = operationAst
         if isinstance(operationAst, Operacao):
             resultado = operationAst.operate(variaveis)
-        else:
-            resultado = operationAst
-        if isinstance(resultado, (list, dict)):
-            return(resultado)
+        if resultado in variaveis:
+            return(variaveis[resultado].valor)
         elif isinstance(resultado, float) and int(resultado) == float(resultado):
             return(int(resultado))
-        elif resultado in variaveis:
-            return(variaveis[resultado].valor)
         return(resultado)

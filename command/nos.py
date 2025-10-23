@@ -1,23 +1,23 @@
 import sys
 
 class Variavel:
-    def __init__(self, nome, valor, linha):
+    def __init__(self, nome: str, valor: any, linha: list) -> None:
         self.nome = nome
         self.valor = valor
         self.linha = linha
 
-    def copy(self):
+    def copy(self) -> "Variavel":
         return Variavel(nome=self.nome, valor=self.valor, linha=self.linha)
 class Erro:
-    def __init__(self, linha, tipo):
+    def __init__(self, linha: list, tipo: str) -> None:
         self.linha = linha
         self.tipo = tipo
 
-    def parseErr(self):
+    def parseErr(self) -> None:
         print(f"""\033[31mErro\033[0m : {self.tipo} --> "\033[1m{self.linha[0]}\033[0m", \033[31mlinha {self.linha[1]}\033[0m""")
         sys.exit(1)
 
-    def execErr(self):
+    def execErr(self) -> None:
         print(f"""\033[31mErro\033[0m : {self.tipo} --> "\033[1m{self.linha[0]}\033[0m", \033[31mlinha {self.linha[1]}\033[0m""")
         sys.exit(1)
 
@@ -32,56 +32,44 @@ class Conditional(TemCorpo):
     pass
 
 #Comandos
-class Edit:
-    def __init__(self,setwho, index, setto, mode, depth, linha):
-        self.setwho = setwho
-        self.index = index
-        self.setto = setto
-        self.mode = mode
-        self.depth = depth
-        self.linha = linha
 class Setter:
-    def __init__(self, setwho, setto, depth, linha):
+    def __init__(self, setwho: str, setto: any, depth: int, linha: list) -> None:
         self.setwho = setwho
         self.setto = setto
         self.depth = depth
         self.linha = linha
 class Show:
-    def __init__(self, content, depth, linha):
+    def __init__(self, content: str, depth: int, linha: list) -> None:
         self.content = content
         self.depth = depth
         self.linha = linha
 
-    def show(self, variaveis):
-        content = self.content
-
-        l = len(content)
-        i = 0 
-        while i < l:
-            if isinstance(content[i], str) and '`' in content[i]:
-                print(content[i].strip("`"), end="")
-                i += 1
-            if i < l:
-                if content[i] in variaveis and variaveis[content[i]].valor is not None:
-                    value = variaveis[content[i]].valor
-                    if isinstance(value, (list, dict)):
-                        #print(value, end="")
-                        return(Erro(linha=self.linha, tipo="Não é possível por no console uma listas e/ou mapas."))
-                    else:
-                        print(value, end="")
+    def show(self, variaveis: dict) -> object | None:
+        content = self.content.copy()
+        for i, c in enumerate(content):
+            if c in variaveis:
+                if not isinstance(variaveis[c].valor, (list, dict)):
+                    content[i] = variaveis[content[i]].valor
                 else:
-                    print(content[i], end="")
-                i+=1
-        print()     
+                    return(Erro(linha=self.linha, tipo="Não é possível por no console lista e/ou mapas."))
+        for i, c in enumerate(content):
+            if isinstance(c, (float, int)):
+                continue
+            if c is None:
+                content[i] = "nil"
+                continue
+            if len(c) > 1:
+                content[i] = c[1:-1] if c[0] == c[-1] == "'" else c
+
+        print(''.join([str(x) for x in content]))
 class Get:
-    def __init__(self, content, setwho, depth, linha):
+    def __init__(self, content: str, setwho: str, depth: int, linha: list) -> None:
         self.content = content
         self.setwho = setwho
         self.depth = depth
         self.linha = linha
 
-    def get(self):
-
+    def get(self) -> any:
         if self.content is not None:
             got = (input(''.join(self.content)))
         else:
@@ -91,33 +79,33 @@ class Get:
             if int(got) == got:
                 got = int(got)
         except:
-            pass
+            got = "'"+got+"'"
         return(got)
 class Exit:
-    def __init__(self, depth, linha):
+    def __init__(self, depth: int, linha: list) -> None:
         self.depth = depth
         self.linha = linha
 class Nothing:
-    def __init__(self, depth, linha):
+    def __init__(self, depth: int, linha: list) -> None:
         self.depth = depth
         self.linha = linha
 
 #CheckErros
 class Check(TemCorpo):
-    def __init__(self, corpo, fim, resultVar, depth, linha):
+    def __init__(self, corpo: object, fim: object, resultVar: str, depth: int, linha: list) -> None:
         self.corpo = corpo
         self.fim = fim
         self.resultVar = resultVar
         self.depth = depth
         self.linha = linha
 class EndCheck(Dummy):
-    def __init__(self, checkPai, depth):
+    def __init__(self, checkPai: object, depth: int) -> None:
         self.checkPai = checkPai
         self.depth = depth     
 
 #Funcoes
 class Function(TemCorpo):
-    def __init__(self, nome, argumentos, corpo, fim, environment, caller, depth, linha):
+    def __init__(self, nome: str, argumentos: list, corpo: object, fim: object, environment: dict, caller: list, depth: int, linha: list) -> None:
         self.nome = nome
         self.argumentos = argumentos
         self.corpo = corpo
@@ -127,60 +115,66 @@ class Function(TemCorpo):
         self.depth = depth
         self.linha = linha
 class Result:
-    def __init__(self, retorno, valor, funcaoPai, depth, linha):
+    def __init__(self, retorno: object | None, valor: any, funcaoPai: object, depth: int, linha: list) -> None:
         self.retorno = retorno
         self.valor = valor
         self.funcaoPai = funcaoPai
         self.depth = depth
         self.linha = linha
 class Execute:
-    def __init__(self, execWho, argumentos, valor, depth, linha):
+    def __init__(self, execWho: str, argumentos: list | None, valor: any, depth: int, linha: list) -> None:
         self.execWho = execWho
         self.argumentos = argumentos
         self.valor = valor
         self.depth = depth
         self.linha = linha
 class Apply:
-    def __init__(self, variavel, depth, linha):
+    def __init__(self, variavel: str, depth: int, linha: list) -> None:
+        self.variavel = variavel
+        self.depth = depth
+        self.linha = linha
+class Adopt:
+    def __init__ (self, variavel: str, depth: int, linha: list) -> None:
         self.variavel = variavel
         self.depth = depth
         self.linha = linha
 
+
 #Loops
 class WhileLoop(Loop):
-    def __init__(self, pergunta, corpo, fim, depth, linha):
+    def __init__(self, pergunta: any, corpo: object, fim: object, depth: int, linha: list) -> None:
         self.pergunta = pergunta
         self.corpo = corpo
         self.fim = fim
         self.depth = depth
         self.linha = linha
 class EndLoop(Dummy):
-    def __init__(self, loopPai, depth):
+    def __init__(self, loopPai: object, depth: int) -> None:
         self.loopPai = loopPai
         self.depth = depth        
 class BreakLoop(Dummy):
-    def __init__(self, loopPai, depth, linha):
+    def __init__(self, loopPai: object, depth: int, linha: list) -> None:
         self.loopPai = loopPai
         self.depth = depth
         self.linha = linha
         
 #Condicionais
 class ConditionalIf(Conditional):
-    def __init__(self, pergunta, corpo, fim, depth, linha):
+    def __init__(self, pergunta: any, corpo: object, fim: object, depth: int, linha: list) -> None:
         self.pergunta = pergunta
         self.corpo = corpo
         self.fim = fim
         self.depth = depth
         self.linha = linha
 class ConditionalElse(Conditional):
-    def __init__(self, pergunta, corpo, fim, depth, linha):
+    def __init__(self, pergunta: any, corpo: object, fim: object, depth: int, linha: list) -> None:
         self.pergunta = pergunta
         self.corpo = corpo
         self.fim = fim
         self.depth = depth
         self.linha = linha
 class Else(Conditional):
-    def __init__(self, corpo, fim, depth, linha):
+    def __init__(self, corpo: object, fim: object, depth: int, linha: list) -> None:
         self.corpo = corpo
         self.fim = fim
         self.depth = depth

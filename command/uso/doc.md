@@ -10,7 +10,7 @@
         12
         Pera
         1 + (VariavelA - VariavelB)
-        fruta + maca
+        'fruta' + 'maca'
 
 </details>
 
@@ -35,7 +35,8 @@
         % | 5 | Módulo        | 2 % 2 = 0
         ^ | 6 | Potência      | 5 ^ 3 = 125
         ~ | 0 | Arredondação  | 0~10.6 = 11 (a ~ b → arredonda o número a com b casas decimais)
-        @ | 8 | Posição       | i @ x → Selecionará e corresponderá à posição "i" de uma variável x.  
+        @ | 8 | Posição       | i @ x -> Selecionará e corresponderá à posição "i" de uma variável x.
+        $ | 8 | Dentro        | i $ x -> Responderá com 1 caso i esteja dentro de x. 0 caso contrário.
 
 * Comparadores:
 
@@ -43,10 +44,10 @@
         < | 3 | Menor         | 10 < 5 = 0 (Retorna 1 caso (a<b), 0 caso contrário.)
         = | 3 | Igualdade     | 10 = 10 = 1 (Retorna 1 caso (a=b), 0 caso contrário.)
 
-        Nota: Se os dois primeiros comparadores (>,<) forem usados com strings,listas ou mapas, a comparação será feita com base na quantidade de caracteres / membros: 
+        Nota: Se os dois primeiros comparadores (>,<) forem usados com textos, listas ou mapas, a comparação será feita com base na quantidade de caracteres / membros: 
         
-                abc > abdc será executado como 3 > 4.
-                [1,2,3] > {abc -> 2, def ->4} será executado como 3 > 2
+                'abc' > 'abdc' será executado como 3 > 4.
+                [1,2,3] > {abc -> 2, def -> 4} será executado como 3 > 2
 
 * Parênteses:
 
@@ -101,9 +102,9 @@
 
         set VARIAVEL to []
 
-  Adicionalmente, a lista também pode ser criada já contendo elementos. Para isso, basta colocá-los entre os braquetes e separá-los por vírgulas. Idealmente, textos devem ser delimitados por indicadores ( ' ), embora isso nem sempre seja obrigatório.:
+  Adicionalmente, a lista também pode ser criada já contendo elementos. Para isso, basta colocá-los entre os braquetes e separá-los por vírgulas. 
 
-        set VARIAVEL to [1, texto, 13.5, 'Tinha: ornintorrinco skrrr']
+        set VARIAVEL to [1, 13.5, 'Tinha: ornintorrinco skrrr']
 
   <br><br>
 
@@ -111,32 +112,12 @@
 
         set VARIAVEL to {}
 
+  Adicionalmente, como a lista, o apa pode ser criado já contendo elementos. Para isso, é usada a seguinte estrutura:
+
+        set VARIAVEL to {chave -> valor, chave2 -> valor2}
 
 
 
-</details>
-
-<details>
-<summary>Comando <b>edit</b></summary>
-
-* Este comando serve para modificar uma posição de uma variável de tipo sequencial ou associativo (listas, mapas, strings...), segue a seguinte estrutura:
-
-        edit VARIAVEL at POSICAO MODO VALOR
-
-  `POSICAO` é uma [operação](#operações). Representa o lugar dentro de `VARIAVEL` que será editado. Pode-se usar `end` para declarar que a posição editada é a ultima. <br>
-  `VARIAVEL` é o nome da variável a ser editada.<br>
-  `VALOR` também é uma [operação](#operações). Representa o que será posto em `POSICAO`
-
-  `MODO` deve ser um dos seguintes:
-
-        Para variáveis do tipo lista e string:
-                set   : muda o que está em POSICAO para VALOR.   
-                insert: põe VALOR logo antes de POSICAO.
-                delete: remove o que está em POSICAO. Não precisa de VALOR.
-
-        Para variáveis do tipo mapa:
-                set: muda o que está em POSICAO para VALOR.
-                delete: remove o que está em POSICAO. Não precisa de VALOR.
 
 </details>
 
@@ -195,7 +176,7 @@
         while a > 0
             set a to a-1
         elif a = 0
-            show zero!
+            show 'zero!'
 
         SAÍDA:
 
@@ -268,15 +249,15 @@
 
 * Este comando é usado para executar uma função, segue a seguinte estrutura:
 
-        execute NOMEFUNCAO VARIAVEIS
+        execute NOMEFUNCAO [VARIAVEIS]
 
   `NOMEFUNCAO` deve referenciar uma função.<br>
-  `VARIAVEIS` são os valores de entrada solicitados pela função chamada. Exemplo:
+  `VARIAVEIS` é uma lista de valores de entrada solicitados pela função chamada. Exemplo:
 
         function soma x y
             result x + y
 
-        execute soma 10 20            
+        execute soma [10, 20]           
 
 
 </details>
@@ -294,6 +275,63 @@
   Caso `FUNCAO` retorne algo, o valor retornado será armazenado em `VARIAVEL`.
 
 </details>
+
+
+<details>
+<summary>Comando <b> adopt </b> </summary>
+
+* Este comando serve para pegar uma variável do escopo global e colocar no escopo local. Exemplo:
+
+        set valor to 10
+        function incremento
+            adopt valor
+            set valor to valor+1
+
+        execute incremento
+        show valor
+
+        SAÍDA:
+
+        11
+
+* Variáveis do escopo global são aquelas definidas fora de qualquer função.
+
+</details>
+
+
+<details>
+<summary>Funções <b> built-in </b></summary>
+
+* São funções que vem com todo script .command. Exemplo:
+
+        set a to [1,2,3,4]
+        execute showList [a]
+
+        SAÍDA:
+
+        [1, 2, 3, 4]
+
+* Por padrão, retoram "-1" em caso de erros.
+
+* Lista de built-ins:
+
+        objLength -> Mostra o comprimento de uma lista/ texto/ mapa.
+        objSort   -> Organiza uma lista/ texto.
+        showList  -> Põe no console o conteúdo de uma lista.
+        showMap   -> Põe no console o conteúdo de um mapa.
+        sumList   -> Mostra a soma do conteúdo de uma lista.
+        objType   -> Mostra o tipo de dado do objeto.
+        stripMarc -> Tira tira marcadores de um texto.
+        indexOf   -> Mostra onde que o primeiro argumento está dentro do segundo.
+        randomNum -> Gera um número aleatório inteiro entre argumento 0 e 1.
+        add       -> Adiciona ao fim de uma lista / texto (primeiro arg) o conteudo do segundo argumento.
+        delete    -> Deleta de uma lista/texto/dicionario (primeiro arg) a posição "segundo argumento".
+        set       -> Altera o valor da posição "segundo argumento" dentro do mapa/lista/texto "primeiro argumento" para "terceiro argumento"
+        insert    -> Insere na posição "segundo argumento" dentro do mapa/lista/texto "primeiro argumento" o conteúdo de "terceiro argumento"
+        
+
+
+</details>
 <br>
 
 
@@ -308,7 +346,7 @@
   `ARGUMENTOS` pode ser composto por texto e variáveis:
 
         set variavel to 12
-        show Numero: variavel
+        show 'Numero: 'variavel
 
         SAÍDA:
 
@@ -323,7 +361,7 @@
 
 * Este comando serve para coletar dados do console. Segue a seguinte estrutura:
 
-        get VARIAVEL TEXTO
+        get VARIAVEL 'TEXTO'
 
   `VARIAVEL` deve ser o nome de uma variável já declarada
   `TEXTO` é um argumento opicional, um texto que aparece no console quando o comando é executado.
