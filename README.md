@@ -1,9 +1,6 @@
 # command
 Esta é a minha tentativa de criar um linguagem de programação que seja mais fácil de entender para iniciantes.
-Ainda é um projeto em desenvolvimento, portanto, bugs ou falhas são de se esperar:
-
-    Lista de problemas encontrados atual:
-      - Interação de erro com comando show
+Além de ser feito como forma de estudo, ainda é um projeto em desenvolvimento. Portanto, bugs ou falhas são de se esperar.
 
 Clique [aqui](https://github.com/HenriqueFReinaldi/command/blob/main/command/uso/doc.md) para abrir a documentação.
 
